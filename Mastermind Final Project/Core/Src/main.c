@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "stm32F413h_discovery_lcd.h"
+#include <stdbool.h>
 
 /* USER CODE END Includes */
 
@@ -96,6 +97,43 @@ void MX_USB_HOST_Process(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// UI Variables:
+
+bool clearScreen = true;
+
+bool drawScreen = true;
+int screenNum = 2;
+
+uint16_t currentColorMap[10][4];
+uint16_t newColorMap[10][4];
+
+const int xPositionMap[10][4] = {
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75},
+		{12, 33, 54, 75}
+};
+const int yPositionMap[10][4] = {
+		{13, 13, 13, 13},
+		{34, 34, 34, 34},
+		{55, 55, 55, 55},
+		{76, 76, 76, 76},
+		{97, 97, 97, 97},
+		{118, 118, 118, 118},
+		{139, 139, 139, 139},
+		{160, 160, 160, 160},
+		{181, 181, 181, 181},
+		{202, 202, 202, 202}
+};
+
+const int radius = 8;
+
 /* USER CODE END 0 */
 
 /**
@@ -105,6 +143,14 @@ void MX_USB_HOST_Process(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+  for (int i = 0; i <10; i++ )
+  {
+	  for (int j = 0; j < 4; j++)
+	  {
+		  newColorMap[i][j] = LCD_COLOR_RED;
+	  }
+  }
 
   /* USER CODE END 1 */
 
@@ -154,10 +200,7 @@ int main(void)
    BSP_LCD_SetFont(&Font24);
 
    BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
-
    BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-
-   BSP_LCD_DisplayStringAt(100, 100, (uint8_t*)"XO", LEFT_MODE);
 
   /* USER CODE END 2 */
 
@@ -169,7 +212,46 @@ int main(void)
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+    if (drawScreen)
+    {
+    	if (clearScreen)
+    	{
+
+    		clearScreen = false;
+
+    	}
+
+    	if (screenNum == 1)
+    	{
+
+    	}
+    	else if (screenNum == 2)
+    	{
+    		for (int i = 0; i <10; i++ )
+    		{
+    			for (int j = 0; j < 4; j++)
+    			{
+    				if (currentColorMap[i][j] != newColorMap[i][j])
+    				{
+    					BSP_LCD_SetTextColor(newColorMap[i][j]);
+    					BSP_LCD_FillCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
+    					currentColorMap[i][j] = newColorMap[i][j];
+
+    					BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+    					BSP_LCD_DrawCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
+    				}
+    			}
+    		}
+    	}
+    	else if (screenNum == 3)
+    	{
+
+    	}
+
+    	drawScreen = false;
+    }
   }
+
   /* USER CODE END 3 */
 }
 
@@ -243,6 +325,9 @@ void SystemClock_Config(void)
   */
 static void MX_NVIC_Init(void)
 {
+  /* EXTI0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
   /* EXTI1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
@@ -252,9 +337,6 @@ static void MX_NVIC_Init(void)
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-  /* EXTI0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 /**
@@ -733,18 +815,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CTP_INT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA0 PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pin : LED2_GREEN_Pin */
   GPIO_InitStruct.Pin = LED2_GREEN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED2_GREEN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ARD_D13_Pin */
   GPIO_InitStruct.Pin = ARD_D13_Pin;
@@ -768,6 +850,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USB_OTG_FS_PWR_EN_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PG13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -780,12 +868,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
