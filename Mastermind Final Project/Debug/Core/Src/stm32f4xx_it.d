@@ -43,7 +43,12 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_fmpi2c_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h \
- ../Core/Inc/stm32f4xx_it.h
+ ../Core/Inc/stm32f4xx_it.h \
+ ../Drivers/BSP/STM32F413H-Discovery/stm32F413h_discovery_lcd.h \
+ ../Drivers/BSP/STM32F413H-Discovery/stm32f413h_discovery.h \
+ ../Drivers/BSP/STM32F413H-Discovery/../Components/st7789h2/st7789h2.h \
+ ../Drivers/BSP/STM32F413H-Discovery/../Components/st7789h2/../Common/lcd.h \
+ j:\embeddedsystem\mastermind\ final\ project\utilities\fonts\fonts.h
 
 ../Core/Inc/main.h:
 
@@ -136,3 +141,13 @@ Core/Src/stm32f4xx_it.o: ../Core/Src/stm32f4xx_it.c ../Core/Inc/main.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dfsdm.h:
 
 ../Core/Inc/stm32f4xx_it.h:
+
+../Drivers/BSP/STM32F413H-Discovery/stm32F413h_discovery_lcd.h:
+
+../Drivers/BSP/STM32F413H-Discovery/stm32f413h_discovery.h:
+
+../Drivers/BSP/STM32F413H-Discovery/../Components/st7789h2/st7789h2.h:
+
+../Drivers/BSP/STM32F413H-Discovery/../Components/st7789h2/../Common/lcd.h:
+
+j:\embeddedsystem\mastermind\ final\ project\utilities\fonts\fonts.h:

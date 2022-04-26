@@ -23,6 +23,10 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include <stdbool.h>
+#include "stm32F413h_discovery_lcd.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +56,14 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+extern bool drawScreen = true;
+
+extern uint16_t newColorMap[10][4];
+
+extern int gameRound = 0;
+extern int currentCol = 0;
+const int MAX_COL = 4;
 
 /* USER CODE END 0 */
 
@@ -208,21 +220,22 @@ void EXTI0_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
 
+  BSP_LCD_SetTextColor(LCD_COLOR_ORANGE);
+  BSP_LCD_FillCircle(100, 100, 20);
+
+  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+  {
+	  currentCol++;
+
+	  if (currentCol == 4)
+	  {
+		  currentCol = 0;
+		  gameRound++;
+	  }
+
+  }
+
   /* USER CODE END EXTI0_IRQn 1 */
-}
-
-/**
-  * @brief This function handles EXTI line1 interrupt.
-  */
-void EXTI1_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI1_IRQn 0 */
-
-  /* USER CODE END EXTI1_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
-  /* USER CODE BEGIN EXTI1_IRQn 1 */
-
-  /* USER CODE END EXTI1_IRQn 1 */
 }
 
 /**
@@ -237,6 +250,28 @@ void EXTI9_5_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
+  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6))
+  {
+
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_GREEN;
+	  drawScreen = true;
+
+  }
+  else if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_7))
+  {
+
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_YELLOW;
+	  	  drawScreen = true;
+
+  }
+  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8))
+  {
+
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLACK;
+	  	  drawScreen = true;
+
+  }
 
   /* USER CODE END EXTI9_5_IRQn 1 */
 }
@@ -253,6 +288,33 @@ void EXTI15_10_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
+
+  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_10))
+  {
+
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLUE;
+	  	  	  drawScreen = true;
+
+  }
+  else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13))
+  {
+
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_RED;
+	  	  	  drawScreen = true;
+
+  }
+  else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15))
+  {
+
+	  currentCol++;
+
+	  	  if (currentCol == 4)
+	  	  {
+	  		  currentCol = 0;
+	  		  gameRound++;
+	  	  }
+
+  }
 
   /* USER CODE END EXTI15_10_IRQn 1 */
 }

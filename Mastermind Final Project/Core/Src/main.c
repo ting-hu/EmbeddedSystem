@@ -97,11 +97,16 @@ void MX_USB_HOST_Process(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Game variables
+
+int gameRound;
+int currentCol;
+
 // UI Variables:
 
 bool clearScreen = true;
 
-bool drawScreen = true;
+bool drawScreen;
 int screenNum = 2;
 
 uint16_t currentColorMap[10][4];
@@ -148,7 +153,7 @@ int main(void)
   {
 	  for (int j = 0; j < 4; j++)
 	  {
-		  newColorMap[i][j] = LCD_COLOR_RED;
+		  newColorMap[i][j] = LCD_COLOR_WHITE;
 	  }
   }
 
@@ -325,18 +330,15 @@ void SystemClock_Config(void)
   */
 static void MX_NVIC_Init(void)
 {
-  /* EXTI0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-  /* EXTI1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
   /* EXTI9_5_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+  /* EXTI0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 /**
@@ -815,18 +817,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(CTP_INT_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PA0 PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LED2_GREEN_Pin */
   GPIO_InitStruct.Pin = LED2_GREEN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED2_GREEN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB0 PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ARD_D13_Pin */
   GPIO_InitStruct.Pin = ARD_D13_Pin;
@@ -850,12 +852,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USB_OTG_FS_PWR_EN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pin : PG13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -868,6 +864,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }

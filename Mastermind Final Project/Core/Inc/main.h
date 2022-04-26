@@ -94,7 +94,6 @@ void Error_Handler(void);
 #define ARD_A0_GPIO_Port GPIOC
 #define CTP_INT_Pin GPIO_PIN_1
 #define CTP_INT_GPIO_Port GPIOC
-#define CTP_INT_EXTI_IRQn EXTI1_IRQn
 #define CODEC_ext_SD_Pin GPIO_PIN_2
 #define CODEC_ext_SD_GPIO_Port GPIOC
 #define CODEC_SD_Pin GPIO_PIN_3
