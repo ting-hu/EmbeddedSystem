@@ -69,6 +69,9 @@ const int MAX_COL = 4;
 
 /* External variables --------------------------------------------------------*/
 extern HCD_HandleTypeDef hhcd_USB_OTG_FS;
+extern DAC_HandleTypeDef hdac;
+extern TIM_HandleTypeDef htim6;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -150,19 +153,6 @@ void UsageFault_Handler(void)
 }
 
 /**
-  * @brief This function handles System service call via SWI instruction.
-  */
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVCall_IRQn 0 */
-
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
-
-  /* USER CODE END SVCall_IRQn 1 */
-}
-
-/**
   * @brief This function handles Debug monitor.
   */
 void DebugMon_Handler(void)
@@ -175,68 +165,12 @@ void DebugMon_Handler(void)
   /* USER CODE END DebugMonitor_IRQn 1 */
 }
 
-/**
-  * @brief This function handles Pendable request for system service.
-  */
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
-
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
-
-  /* USER CODE END PendSV_IRQn 1 */
-}
-
-/**
-  * @brief This function handles System tick timer.
-  */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
-}
-
 /******************************************************************************/
 /* STM32F4xx Peripheral Interrupt Handlers                                    */
 /* Add here the Interrupt Handlers for the used peripherals.                  */
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f4xx.s).                    */
 /******************************************************************************/
-
-/**
-  * @brief This function handles EXTI line0 interrupt.
-  */
-void EXTI0_IRQHandler(void)
-{
-  /* USER CODE BEGIN EXTI0_IRQn 0 */
-
-  /* USER CODE END EXTI0_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
-  /* USER CODE BEGIN EXTI0_IRQn 1 */
-
-  BSP_LCD_SetTextColor(LCD_COLOR_ORANGE);
-  BSP_LCD_FillCircle(100, 100, 20);
-
-  if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
-  {
-	  currentCol++;
-
-	  if (currentCol == 4)
-	  {
-		  currentCol = 0;
-		  gameRound++;
-	  }
-
-  }
-
-  /* USER CODE END EXTI0_IRQn 1 */
-}
 
 /**
   * @brief This function handles EXTI line[9:5] interrupts.
@@ -262,14 +196,14 @@ void EXTI9_5_IRQHandler(void)
   {
 
 	  newColorMap[gameRound][currentCol] = LCD_COLOR_YELLOW;
-	  	  drawScreen = true;
+	  drawScreen = true;
 
   }
   else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8))
   {
 
 	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLACK;
-	  	  drawScreen = true;
+	  drawScreen = true;
 
   }
 
@@ -285,6 +219,7 @@ void EXTI15_10_IRQHandler(void)
 
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
@@ -293,30 +228,46 @@ void EXTI15_10_IRQHandler(void)
   {
 
 	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLUE;
-	  	  	  drawScreen = true;
+	  drawScreen = true;
 
+  }
+  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12))
+  {
+	  currentCol++;
+
+	  if (currentCol == 4)
+	  {
+		  currentCol = 0;
+	  	  gameRound++;
+	  }
   }
   else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13))
   {
-
 	  newColorMap[gameRound][currentCol] = LCD_COLOR_RED;
-	  	  	  drawScreen = true;
-
+	  drawScreen = true;
   }
   else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15))
   {
-
-	  currentCol++;
-
-	  	  if (currentCol == 4)
-	  	  {
-	  		  currentCol = 0;
-	  		  gameRound++;
-	  	  }
-
+	  newColorMap[gameRound][currentCol] = LCD_COLOR_MAGENTA;
+	  drawScreen = true;
   }
 
   /* USER CODE END EXTI15_10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM6 global interrupt, DAC1 and DAC2 underrun error interrupts.
+  */
+void TIM6_DAC_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
+
+  /* USER CODE END TIM6_DAC_IRQn 0 */
+  HAL_DAC_IRQHandler(&hdac);
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
+
+  /* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
 /**

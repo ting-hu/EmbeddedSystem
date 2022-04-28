@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "usb_host.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -68,6 +69,20 @@ UART_HandleTypeDef huart6;
 SRAM_HandleTypeDef hsram1;
 SRAM_HandleTypeDef hsram2;
 
+/* Definitions for drawScreen */
+osThreadId_t drawScreenHandle;
+const osThreadAttr_t drawScreen_attributes = {
+  .name = "drawScreen",
+  .priority = (osPriority_t) osPriorityBelowNormal,
+  .stack_size = 128 * 4
+};
+/* Definitions for gameControl */
+osThreadId_t gameControlHandle;
+const osThreadAttr_t gameControl_attributes = {
+  .name = "gameControl",
+  .priority = (osPriority_t) osPriorityBelowNormal,
+  .stack_size = 128 * 4
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -87,9 +102,10 @@ static void MX_SDIO_SD_Init(void);
 static void MX_UART10_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_I2C2_Init(void);
-static void MX_NVIC_Init(void);
-void MX_USB_HOST_Process(void);
+void DrawScreenTask(void *argument);
+void GameControlTask(void *argument);
 
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -99,8 +115,13 @@ void MX_USB_HOST_Process(void);
 
 // Game variables
 
+uint16_t solution[4];
+bool generateSolution = true;
+
 int gameRound;
 int currentCol;
+
+bool gameover = false;
 
 // UI Variables:
 
@@ -188,7 +209,6 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_UART10_Init();
   MX_USART6_UART_Init();
-  MX_USB_HOST_Init();
   MX_I2C2_Init();
 
   /* Initialize interrupts */
@@ -209,52 +229,48 @@ int main(void)
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of drawScreen */
+  drawScreenHandle = osThreadNew(DrawScreenTask, NULL, &drawScreen_attributes);
+
+  /* creation of gameControl */
+  gameControlHandle = osThreadNew(GameControlTask, NULL, &gameControl_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
-    MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
-    if (drawScreen)
-    {
-    	if (clearScreen)
-    	{
 
-    		clearScreen = false;
-
-    	}
-
-    	if (screenNum == 1)
-    	{
-
-    	}
-    	else if (screenNum == 2)
-    	{
-    		for (int i = 0; i <10; i++ )
-    		{
-    			for (int j = 0; j < 4; j++)
-    			{
-    				if (currentColorMap[i][j] != newColorMap[i][j])
-    				{
-    					BSP_LCD_SetTextColor(newColorMap[i][j]);
-    					BSP_LCD_FillCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
-    					currentColorMap[i][j] = newColorMap[i][j];
-
-    					BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-    					BSP_LCD_DrawCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
-    				}
-    			}
-    		}
-    	}
-    	else if (screenNum == 3)
-    	{
-
-    	}
-
-    	drawScreen = false;
-    }
   }
 
   /* USER CODE END 3 */
@@ -336,9 +352,6 @@ static void MX_NVIC_Init(void)
   /* EXTI15_10_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-  /* EXTI0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 }
 
 /**
@@ -830,13 +843,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED2_GREEN_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : ARD_D13_Pin */
-  GPIO_InitStruct.Pin = ARD_D13_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pins : PB12 PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_SPI3;
-  HAL_GPIO_Init(ARD_D13_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LCD_CTP_RST_Pin LCD_TE_Pin WIFI_WKUP_Pin */
   GPIO_InitStruct.Pin = LCD_CTP_RST_Pin|LCD_TE_Pin|WIFI_WKUP_Pin;
@@ -864,12 +875,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF6_SPI3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
@@ -966,6 +971,136 @@ static void MX_FSMC_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_DrawScreenTask */
+/**
+  * @brief  Function implementing the drawScreen thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_DrawScreenTask */
+void DrawScreenTask(void *argument)
+{
+  /* init code for USB_HOST */
+  MX_USB_HOST_Init();
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  if (drawScreen)
+	  {
+		  if (clearScreen)
+	      {
+
+	      	clearScreen = false;
+
+	      }
+
+	      if (screenNum == 1)
+	      {
+
+	      }
+	      else if (screenNum == 2)
+	      {
+	    	  for (int i = 0; i <10; i++ )
+	    	  {
+	    		  for (int j = 0; j < 4; j++)
+	    		  {
+	    			  if (currentColorMap[i][j] != newColorMap[i][j])
+	    			  {
+	    				  BSP_LCD_SetTextColor(newColorMap[i][j]);
+	    				  BSP_LCD_FillCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
+	    				  currentColorMap[i][j] = newColorMap[i][j];
+
+	    				  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	    				  BSP_LCD_DrawCircle(xPositionMap[i][j], yPositionMap[i][j], radius);
+	    			  }
+	    		  }
+	    	  }
+	      }
+	      else if (screenNum == 3)
+	      {
+
+	      }
+
+	      drawScreen = false;
+	  }
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_GameControlTask */
+/**
+* @brief Function implementing the gameControl thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_GameControlTask */
+void GameControlTask(void *argument)
+{
+  /* USER CODE BEGIN GameControlTask */
+  /* Infinite loop */
+  for(;;)
+  {
+	  if (screenNum == 1)
+	  {
+
+	  }
+	  else if (screenNum == 2)
+	  {
+		  if(generateSolution)
+		  {
+			  /*uint32_t rand =  0;
+
+			  if (rand == 0)
+			  {
+				  newColorMap[0][0] = LCD_COLOR_RED;
+			  }
+			  else if (rand == 1)
+			  {
+				  newColorMap[0][0] = LCD_COLOR_BLUE;
+			  }
+
+			  drawScreen = true;
+			  HAL_Delay(500);
+
+			  generateSolution = false;*/
+		  }
+
+
+		  if (gameover)
+		  {
+			  screenNum = 3;
+		  }
+	  }
+	  else if (screenNum == 3)
+	  {
+
+	  }
+  }
+  /* USER CODE END GameControlTask */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

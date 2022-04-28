@@ -150,8 +150,6 @@ void Error_Handler(void);
 #define LCD_PSRAM_D11_GPIO_Port GPIOE
 #define LCD_PSRAM_D12_Pin GPIO_PIN_15
 #define LCD_PSRAM_D12_GPIO_Port GPIOE
-#define ARD_D13_Pin GPIO_PIN_12
-#define ARD_D13_GPIO_Port GPIOB
 #define LCD_CTP_RST_Pin GPIO_PIN_13
 #define LCD_CTP_RST_GPIO_Port GPIOB
 #define LCD_TE_Pin GPIO_PIN_14
