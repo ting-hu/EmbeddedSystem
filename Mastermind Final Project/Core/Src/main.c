@@ -27,6 +27,7 @@
 
 #include "stm32F413h_discovery_lcd.h"
 #include <stdbool.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -116,18 +117,42 @@ static void MX_NVIC_Init(void);
 // Game variables
 
 uint16_t solution[4];
+uint16_t colorOptions[6] = { LCD_COLOR_GREEN, LCD_COLOR_YELLOW, LCD_COLOR_RED, LCD_COLOR_BLUE, LCD_COLOR_MAGENTA, LCD_COLOR_BLACK };
 bool generateSolution = true;
+bool checkSolution = false;
 
-int gameRound;
-int currentCol;
+int gameRound = 0;
+int currentCol = 0;
 
 bool gameover = false;
+
+bool checkButton1 = true;
+bool checkButton2 = true;
+bool checkButton3 = true;
+bool checkButton4 = true;
+bool checkButton5 = true;
+bool checkButton6 = true;
+bool checkButton7 = true;
+
+bool handlingPress = false;
+
+int chosenButton = -1;
+uint16_t chosenColor = LCD_COLOR_WHITE;
+
+int correctGuesses = 0;
+int wrongPositions = 0;
+
+bool positionUsedSolution[4] = {false, false, false, false};
+bool positionUsedGuess[4] = {false, false, false, false};
+
+char clue[20] = "";
 
 // UI Variables:
 
 bool clearScreen = true;
 
-bool drawScreen;
+bool drawScreen = true;
+bool drawClue = false;
 int screenNum = 2;
 
 uint16_t currentColorMap[10][4];
@@ -1017,6 +1042,14 @@ void DrawScreenTask(void *argument)
 	    			  }
 	    		  }
 	    	  }
+
+	    	  if (drawClue)
+	    	  {
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	    		  BSP_LCD_DisplayStringAt(90, yPositionMap[gameRound-1][0], clue, LEFT_MODE);
+	    		  drawClue = false;
+	    	  }
+
 	      }
 	      else if (screenNum == 3)
 	      {
@@ -1050,21 +1083,120 @@ void GameControlTask(void *argument)
 	  {
 		  if(generateSolution)
 		  {
-			  /*uint32_t rand =  0;
+			 for(int i = 0; i < 4; i++)
+			 {
+				 // Range will be 0 -> 5
+				 int index = rand() % 6;
+				 //solution[i] = colorOptions[index];
+				 solution[0] = LCD_COLOR_RED;
+				 solution[1] = LCD_COLOR_RED;
+				 solution[2] = LCD_COLOR_GREEN;
+				 solution[3] = LCD_COLOR_GREEN;
+			 }
 
-			  if (rand == 0)
+			 generateSolution = false;
+			 drawScreen = true;
+		  }
+
+		  if(checkSolution)
+		  {
+			  // Make sure we aren't out of bounds
+			  if(gameRound - 1 < 10)
 			  {
-				  newColorMap[0][0] = LCD_COLOR_RED;
+				  for(int col = 0; col < 4; col++)
+				  {
+					  if(currentColorMap[gameRound - 1][col] == solution[col])
+					  {
+						  correctGuesses++;
+						  positionUsedSolution[col] = true;
+						  positionUsedGuess[col] = true;
+					  }
+
+				  }
+
+				  if (correctGuesses == 4)
+				  {
+					  screenNum = 3;
+				  }
+				  else
+				  {
+					  for(int col = 0; col < 4; col++){
+						  if (!positionUsedGuess[col])
+						  {
+							  for (int solutionCol = 0; solutionCol < 4; solutionCol++)
+							  {
+								  if (currentColorMap[gameRound - 1][col] == solution[solutionCol])
+								  {
+									  if (!positionUsedSolution[solutionCol])
+									  {
+										  wrongPositions++;
+										  positionUsedSolution[solutionCol] = true;
+										  positionUsedGuess[col] = true;
+										  solutionCol = 4;
+									  }
+								  }
+							  }
+						  }
+					  }
+				  }
+
+				  strcpy(clue, "");
+
+				  for(int i = 0; i < 4; i++)
+				  {
+					  positionUsedSolution[i] = false;
+					  positionUsedGuess[i] = false;
+
+					  if (correctGuesses != 0)
+					  {
+						  strcat(clue, "!   ");
+						  correctGuesses--;
+					  }
+					  else if (wrongPositions != 0)
+					  {
+						  strcat(clue, "?   ");
+						  wrongPositions--;
+					  }
+					  else
+					  {
+						  strcat(clue, "-   ");
+					  }
+				  }
+				  drawScreen = true;
+				  drawClue = true;
 			  }
-			  else if (rand == 1)
+
+			  checkSolution = false;
+		  }
+
+		  if (chosenButton != -1 && handlingPress)
+		  {
+			  if(chosenButton == 6)
 			  {
-				  newColorMap[0][0] = LCD_COLOR_BLUE;
+				  if (chosenColor != LCD_COLOR_WHITE)
+				  {
+					  currentCol++;
+					  if (currentCol == 4)
+					  {
+						  currentCol = 0;
+						  gameRound++;
+
+						  checkSolution = true;
+					  }
+					  chosenColor = LCD_COLOR_WHITE;
+				  }
+			  }
+			  else
+			  {
+				  chosenColor = colorOptions[chosenButton];
+
+				  newColorMap[gameRound][currentCol] = chosenColor;
+
+				  drawScreen = true;
 			  }
 
-			  drawScreen = true;
-			  HAL_Delay(500);
-
-			  generateSolution = false;*/
+			  handlingPress = false;
+			  chosenButton = -1;
 		  }
 
 

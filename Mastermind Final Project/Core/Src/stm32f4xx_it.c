@@ -57,13 +57,17 @@
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-extern bool drawScreen = true;
+extern bool checkButton1;
+extern bool checkButton2;
+extern bool checkButton3;
+extern bool checkButton4;
+extern bool checkButton5;
+extern bool checkButton6;
+extern bool checkButton7;
 
-extern uint16_t newColorMap[10][4];
+extern bool handlingPress;
 
-extern int gameRound = 0;
-extern int currentCol = 0;
-const int MAX_COL = 4;
+extern int chosenButton;
 
 /* USER CODE END 0 */
 
@@ -185,26 +189,24 @@ void EXTI9_5_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
-  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6))
+  if (!handlingPress)
   {
 
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_GREEN;
-	  drawScreen = true;
-
-  }
-  else if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_7))
-  {
-
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_YELLOW;
-	  drawScreen = true;
-
-  }
-  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8))
-  {
-
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLACK;
-	  drawScreen = true;
-
+	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6) && checkButton1)
+	  {
+		  chosenButton = 0;
+		  handlingPress = true;
+	  }
+	  else if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_7) && checkButton2)
+	  {
+		  chosenButton = 1;
+		  handlingPress = true;
+	  }
+	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) && checkButton5)
+	  {
+		  chosenButton = 4;
+		  handlingPress = true;
+	  }
   }
 
   /* USER CODE END EXTI9_5_IRQn 1 */
@@ -224,32 +226,29 @@ void EXTI15_10_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_15);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
-  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_10))
+  if (!handlingPress)
   {
 
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_BLUE;
-	  drawScreen = true;
-
-  }
-  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12))
-  {
-	  currentCol++;
-
-	  if (currentCol == 4)
+	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_10) && checkButton4)
 	  {
-		  currentCol = 0;
-	  	  gameRound++;
+		  chosenButton = 3;
+		  handlingPress = true;
 	  }
-  }
-  else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13))
-  {
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_RED;
-	  drawScreen = true;
-  }
-  else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15))
-  {
-	  newColorMap[gameRound][currentCol] = LCD_COLOR_MAGENTA;
-	  drawScreen = true;
+	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) && checkButton7)
+	  {
+		  chosenButton = 6;
+		  handlingPress = true;
+	  }
+	  else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13) && checkButton3)
+	  {
+		  chosenButton = 2;
+		  handlingPress = true;
+	  }
+	  else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) && checkButton6)
+	  {
+		  chosenButton = 5;
+		  handlingPress = true;
+	  }
   }
 
   /* USER CODE END EXTI15_10_IRQn 1 */
