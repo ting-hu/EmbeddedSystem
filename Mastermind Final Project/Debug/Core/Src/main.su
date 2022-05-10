@@ -14,7 +14,8 @@ main.c:747:13:MX_UART10_Init	8	static
 main.c:780:13:MX_USART6_UART_Init	8	static
 main.c:813:13:MX_GPIO_Init	64	static
 main.c:908:13:MX_FSMC_Init	40	static
-main.c:1007:6:DrawScreenTask	24	static
-main.c:1072:6:GameControlTask	40	static
-main.c:1224:6:HAL_TIM_PeriodElapsedCallback	16	static
-main.c:1241:6:Error_Handler	4	static
+main.c:998:6:resetGame	16	static
+main.c:1034:6:DrawScreenTask	24	static
+main.c:1177:6:GameControlTask	40	static
+main.c:1385:6:HAL_TIM_PeriodElapsedCallback	16	static
+main.c:1402:6:Error_Handler	4	static

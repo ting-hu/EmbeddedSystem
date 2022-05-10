@@ -57,14 +57,6 @@
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-extern bool checkButton1;
-extern bool checkButton2;
-extern bool checkButton3;
-extern bool checkButton4;
-extern bool checkButton5;
-extern bool checkButton6;
-extern bool checkButton7;
-
 extern bool handlingPress;
 
 extern int chosenButton;
@@ -192,17 +184,17 @@ void EXTI9_5_IRQHandler(void)
   if (!handlingPress)
   {
 
-	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6) && checkButton1)
+	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_6))
 	  {
 		  chosenButton = 0;
 		  handlingPress = true;
 	  }
-	  else if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_7) && checkButton2)
+	  else if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_7))
 	  {
 		  chosenButton = 1;
 		  handlingPress = true;
 	  }
-	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) && checkButton5)
+	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8))
 	  {
 		  chosenButton = 4;
 		  handlingPress = true;
@@ -229,22 +221,22 @@ void EXTI15_10_IRQHandler(void)
   if (!handlingPress)
   {
 
-	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_10) && checkButton4)
+	  if(HAL_GPIO_ReadPin(GPIOF, GPIO_PIN_10))
 	  {
 		  chosenButton = 3;
 		  handlingPress = true;
 	  }
-	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) && checkButton7)
+	  else if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12))
 	  {
 		  chosenButton = 6;
 		  handlingPress = true;
 	  }
-	  else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13) && checkButton3)
+	  else if(HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_13))
 	  {
 		  chosenButton = 2;
 		  handlingPress = true;
 	  }
-	  else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) && checkButton6)
+	  else if(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15))
 	  {
 		  chosenButton = 5;
 		  handlingPress = true;

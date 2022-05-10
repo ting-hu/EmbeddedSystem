@@ -121,18 +121,12 @@ uint16_t colorOptions[6] = { LCD_COLOR_GREEN, LCD_COLOR_YELLOW, LCD_COLOR_RED, L
 bool generateSolution = true;
 bool checkSolution = false;
 
+bool resetGameValues = true;
+
 int gameRound = 0;
 int currentCol = 0;
 
 bool gameover = false;
-
-bool checkButton1 = true;
-bool checkButton2 = true;
-bool checkButton3 = true;
-bool checkButton4 = true;
-bool checkButton5 = true;
-bool checkButton6 = true;
-bool checkButton7 = true;
 
 bool handlingPress = false;
 
@@ -153,7 +147,8 @@ bool clearScreen = true;
 
 bool drawScreen = true;
 bool drawClue = false;
-int screenNum = 2;
+int screenNum = 1;
+bool win = false;
 
 uint16_t currentColorMap[10][4];
 uint16_t newColorMap[10][4];
@@ -184,6 +179,11 @@ const int yPositionMap[10][4] = {
 };
 
 const int radius = 8;
+
+// Screen 1&3 variables
+
+int dificulty = -1;
+int replayChoice = -1;
 
 /* USER CODE END 0 */
 
@@ -995,6 +995,104 @@ static void MX_FSMC_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void resetGame()
+{
+	 dificulty = -1;
+
+	 for (int i = 0; i <10; i++ )
+	 {
+		 for (int j = 0; j < 4; j++)
+		 {
+			newColorMap[i][j] = LCD_COLOR_WHITE;
+		 }
+	 }
+
+	 chosenButton = -1;
+	 chosenColor = LCD_COLOR_WHITE;
+	 gameRound = 0;
+	 currentCol = 0;
+	 win = false;
+	 gameover = false;
+
+	 generateSolution = true;
+
+	 correctGuesses = 0;
+	 wrongPositions = 0;
+
+	 replayChoice = -1;
+
+	 ////////////
+
+	 uint16_t solution[4];
+	 uint16_t colorOptions[6] = { LCD_COLOR_GREEN, LCD_COLOR_YELLOW, LCD_COLOR_RED, LCD_COLOR_BLUE, LCD_COLOR_MAGENTA, LCD_COLOR_BLACK };
+	 bool generateSolution = true;
+	 bool checkSolution = false;
+
+	 bool resetGameValues = true;
+
+	 int gameRound = 0;
+	 int currentCol = 0;
+
+	 bool gameover = false;
+
+	 bool handlingPress = false;
+
+	 int chosenButton = -1;
+	 uint16_t chosenColor = LCD_COLOR_WHITE;
+
+	 int correctGuesses = 0;
+	 int wrongPositions = 0;
+
+	 bool positionUsedSolution[4] = {false, false, false, false};
+	 bool positionUsedGuess[4] = {false, false, false, false};
+
+	 char clue[20] = "";
+
+	 // UI Variables:
+
+	 bool clearScreen = true;
+
+	 bool drawScreen = true;
+	 bool drawClue = false;
+	 int screenNum = 1;
+	 bool win = false;
+
+	 uint16_t currentColorMap[10][4];
+	 uint16_t newColorMap[10][4];
+
+	 const int xPositionMap[10][4] = {
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75},
+	 		{12, 33, 54, 75}
+	 };
+	 const int yPositionMap[10][4] = {
+	 		{13, 13, 13, 13},
+	 		{34, 34, 34, 34},
+	 		{55, 55, 55, 55},
+	 		{76, 76, 76, 76},
+	 		{97, 97, 97, 97},
+	 		{118, 118, 118, 118},
+	 		{139, 139, 139, 139},
+	 		{160, 160, 160, 160},
+	 		{181, 181, 181, 181},
+	 		{202, 202, 202, 202}
+	 };
+
+	 const int radius = 8;
+
+	 // Screen 1&3 variables
+
+	 int dificulty = -1;
+	 int replayChoice = -1;
+}
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_DrawScreenTask */
@@ -1015,15 +1113,57 @@ void DrawScreenTask(void *argument)
 	  if (drawScreen)
 	  {
 		  if (clearScreen)
-	      {
-
-	      	clearScreen = false;
-
-	      }
+		  {
+			BSP_LCD_Clear(LCD_COLOR_WHITE);
+			clearScreen = false;
+		  }
 
 	      if (screenNum == 1)
 	      {
+	    	  BSP_LCD_SetFont(&Font24);
+	    	  BSP_LCD_SetTextColor(LCD_COLOR_RED);
+	          BSP_LCD_DisplayStringAt(35, 30, "MASTERMIND", LEFT_MODE);
 
+	          BSP_LCD_SetFont(&Font16);
+	          BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	          BSP_LCD_DisplayStringAt(20, 140, "Easy", LEFT_MODE);
+	          BSP_LCD_DisplayStringAt(85, 140, "Medium", LEFT_MODE);
+	          BSP_LCD_DisplayStringAt(170, 140, "Hard", LEFT_MODE);
+
+	          if (dificulty == 0)
+	          {
+	        	  BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
+	        	  BSP_LCD_FillCircle(35, 160, radius);
+
+	        	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	        	  BSP_LCD_FillCircle(100, 160, radius);
+	        	  BSP_LCD_FillCircle(185, 160, radius);
+	          }
+	          else if (dificulty == 1)
+			  {
+				  BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
+				  BSP_LCD_FillCircle(100, 160, radius);
+
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillCircle(35, 160, radius);
+				  BSP_LCD_FillCircle(185, 160, radius);
+			  }
+	          else if (dificulty == 2)
+			  {
+				  BSP_LCD_SetTextColor(LCD_COLOR_RED);
+				  BSP_LCD_FillCircle(185, 160, radius);
+
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillCircle(100, 160, radius);
+				  BSP_LCD_FillCircle(35, 160, radius);
+			  }
+	          else
+			  {
+	        	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	        	  BSP_LCD_FillCircle(35, 160, radius);
+				  BSP_LCD_FillCircle(100, 160, radius);
+				  BSP_LCD_FillCircle(185, 160, radius);
+			  }
 	      }
 	      else if (screenNum == 2)
 	      {
@@ -1053,6 +1193,42 @@ void DrawScreenTask(void *argument)
 	      }
 	      else if (screenNum == 3)
 	      {
+	    	  if(replayChoice == 0)
+	    	  {
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	    		  BSP_LCD_FillCircle(40, 130, radius);
+
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	    		  BSP_LCD_FillCircle(40, 170, radius);
+
+	    	  }
+	    	  else if(replayChoice == 1)
+	    	  {
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+				  BSP_LCD_FillCircle(40, 170, radius);
+
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillCircle(40, 130, radius);
+	    	  }
+	    	  else{
+	    		  if(win){
+	    			  BSP_LCD_SetFont(&Font24);
+	    			  BSP_LCD_SetTextColor(LCD_COLOR_RED);
+	    			  BSP_LCD_DisplayStringAt(35, 30, "YOU WON!! :)", LEFT_MODE);
+	    		  }
+	    		  else{
+	    			  BSP_LCD_SetFont(&Font24);
+	    			  BSP_LCD_SetTextColor(LCD_COLOR_RED);
+	    			  BSP_LCD_DisplayStringAt(35, 30, "YOU LOST :(", LEFT_MODE);
+	    		  }
+	    		  BSP_LCD_SetFont(&Font20);
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	    		  BSP_LCD_DisplayStringAt(50, 125, "Replay", LEFT_MODE);
+
+	    		  BSP_LCD_SetFont(&Font20);
+	    		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	    		  BSP_LCD_DisplayStringAt(50, 165, "Exit", LEFT_MODE);
+	    	  }
 
 	      }
 
@@ -1077,7 +1253,33 @@ void GameControlTask(void *argument)
   {
 	  if (screenNum == 1)
 	  {
+		  if (chosenButton != -1 && handlingPress)
+		  {
+			  if(chosenButton == 0)
+			  {
+				  dificulty = 0;
+			  }
+			  else if(chosenButton == 1)
+			  {
+				  dificulty = 1;
+			  }
+			  else if(chosenButton == 2)
+			  {
+				  dificulty = 2;
+			  }
+			  else if(chosenButton == 6)
+			  {
+				  if (dificulty != -1)
+				  {
+					  screenNum = 2;
+					  clearScreen = true;
+				  }
+			  }
 
+			  handlingPress = false;
+			  chosenButton = -1;
+			  drawScreen = true;
+		  }
 	  }
 	  else if (screenNum == 2)
 	  {
@@ -1116,7 +1318,8 @@ void GameControlTask(void *argument)
 
 				  if (correctGuesses == 4)
 				  {
-					  screenNum = 3;
+					  win = true;
+					  gameover = true;
 				  }
 				  else
 				  {
@@ -1203,11 +1406,40 @@ void GameControlTask(void *argument)
 		  if (gameover)
 		  {
 			  screenNum = 3;
+			  clearScreen = true;
+			  drawScreen = true;
 		  }
 	  }
 	  else if (screenNum == 3)
 	  {
+		  if (chosenButton != -1 && handlingPress)
+		  {
+			  if(chosenButton == 0)
+			  {
+				  replayChoice = 0;
+			  }
+			  if(chosenButton == 1)
+			  {
+				  replayChoice = 1;
+			  }
+			  if(chosenButton == 6)
+			  {
+				  if (replayChoice == 0)
+				  {
+					  screenNum = 1;
+					  clearScreen = true;
+					  resetGame();
+				  }
+				  else{
+					  //exit the system
+				  }
+			  }
 
+			  handlingPress = false;
+			  chosenButton = -1;
+			  drawScreen = true;
+
+		  }
 	  }
   }
   /* USER CODE END GameControlTask */
