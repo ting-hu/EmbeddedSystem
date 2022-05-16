@@ -137,8 +137,10 @@ bool receiving = false;
 
 //  creating a buffer of 10 bytes
 uint8_t Rx_data[10];
-uint8_t solutionPrompt[100] = "Enter solution with numbers 1-6";
+uint8_t solutionPrompt[31] = "Enter solution with numbers 1-6";
 uint8_t cluePrompt[100] = "Enter clue with ?, !, and -";
+
+bool isCorrectSolutionInput = false;
 
 // Stores the handle of tasks that will be notified */
 static TaskHandle_t xTaskToNotifyTx = NULL;
@@ -185,7 +187,7 @@ const int radius = 8;
 
 // Screen 1&3 variables
 
-int dificulty = -1;
+int multiplayerChoice = -1;
 int replayChoice = -1;
 
 /* USER CODE END PV */
@@ -231,19 +233,17 @@ ScreenOneGameOperation(void)
 	{
 		if(chosenButton == 0)
 		{
-			dificulty = 0;
+			multiplayerChoice = 0;
+			multiplayer = false;
 		}
 		else if(chosenButton == 1)
 		{
-			dificulty = 1;
-		}
-		else if(chosenButton == 2)
-		{
-			dificulty = 2;
+			multiplayerChoice = 1;
+			multiplayer = true;
 		}
 		else if(chosenButton == 6)
 		{
-			if (dificulty != -1)
+			if (multiplayerChoice != -1)
 			{
 				screenNum = 2;
 				clearScreen = true;
@@ -260,16 +260,43 @@ ScreenTwoGameOperation(void)
 {
 	if(generateSolution)
 	{
-	 for(int i = 0; i < 4; i++)
-	 {
-		 // Range will be 0 -> 5
-		 int index = rand() % 6;
-		 //solution[i] = colorOptions[index];
-		 solution[0] = LCD_COLOR_RED;
-		 solution[1] = LCD_COLOR_RED;
-		 solution[2] = LCD_COLOR_GREEN;
-		 solution[3] = LCD_COLOR_GREEN;
-	 }
+		if (multiplayer)
+		{
+			while (!isCorrectSolutionInput)
+			{
+				sending = true;
+
+				while (strlen(Rx_data) != 4)
+				{
+
+				}
+
+				for(int i = 0; i < 4; i++)
+				{
+					if (Rx_data[i]-49 < 0 || Rx_data[i]-49 > 5)
+					{
+						i = 4;
+						isCorrectSolutionInput = false;
+						bzero(Rx_data, sizeof Rx_data);
+					}
+					else
+					{
+						solution[i] = colorOptions[Rx_data[i]-49];
+						isCorrectSolutionInput = true;
+					}
+				}
+			}
+		}
+		else
+		{
+			 for(int i = 0; i < 4; i++)
+			 {
+				 // Range will be 0 -> 5
+				 int index = rand() % 6;
+				 solution[i] = colorOptions[index];
+				 //solution[i] = LCD_COLOR_GREEN;
+			 }
+		}
 
 	 generateSolution = false;
 	 drawScreen = true;
@@ -411,8 +438,13 @@ ScreenThreeGameOperation(void)
 			  clearScreen = true;
 			  resetGame();
 		  }
-		  else{
-			  //exit the system
+		  else
+		  {
+			  osThreadTerminate(task01Handle);
+			  osThreadTerminate(task03Handle);
+			  osThreadTerminate(displayTaskHandle);
+			  osThreadTerminate(task02Handle);
+			  osThreadTerminate(gameControlTaskHandle);
 		  }
 	  }
 
@@ -425,49 +457,32 @@ ScreenThreeGameOperation(void)
 
 void DrawScreenOne()
 {
-	BSP_LCD_SetFont(&Font24);
-	BSP_LCD_SetTextColor(LCD_COLOR_RED);
-	BSP_LCD_DisplayStringAt(35, 30, "MASTERMIND", LEFT_MODE);
-
-	BSP_LCD_SetFont(&Font16);
-	BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-	BSP_LCD_DisplayStringAt(20, 140, "Easy", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(85, 140, "Medium", LEFT_MODE);
-	BSP_LCD_DisplayStringAt(170, 140, "Hard", LEFT_MODE);
-
-	if (dificulty == 0)
+	if (multiplayerChoice == 0)
 	{
-	  BSP_LCD_SetTextColor(LCD_COLOR_GREEN);
-	  BSP_LCD_FillCircle(35, 160, radius);
+	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	  BSP_LCD_FillCircle(35, 125, radius);
 
 	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	  BSP_LCD_FillCircle(100, 160, radius);
-	  BSP_LCD_FillCircle(185, 160, radius);
+	  BSP_LCD_FillCircle(35, 165, radius);
 	}
-	else if (dificulty == 1)
+	else if (multiplayerChoice == 1)
 	{
-	  BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
-	  BSP_LCD_FillCircle(100, 160, radius);
+	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+	  BSP_LCD_FillCircle(35, 165, radius);
 
 	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	  BSP_LCD_FillCircle(35, 160, radius);
-	  BSP_LCD_FillCircle(185, 160, radius);
-	}
-	else if (dificulty == 2)
-	{
-	  BSP_LCD_SetTextColor(LCD_COLOR_RED);
-	  BSP_LCD_FillCircle(185, 160, radius);
-
-	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	  BSP_LCD_FillCircle(100, 160, radius);
-	  BSP_LCD_FillCircle(35, 160, radius);
+	  BSP_LCD_FillCircle(35, 125, radius);
 	}
 	else
 	{
-	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-	  BSP_LCD_FillCircle(35, 160, radius);
-	  BSP_LCD_FillCircle(100, 160, radius);
-	  BSP_LCD_FillCircle(185, 160, radius);
+		BSP_LCD_SetFont(&Font24);
+		BSP_LCD_SetTextColor(LCD_COLOR_RED);
+		BSP_LCD_DisplayStringAt(35, 30, "MASTERMIND", LEFT_MODE);
+
+		BSP_LCD_SetFont(&Font16);
+		BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+		BSP_LCD_DisplayStringAt(50, 120, "Single Player", LEFT_MODE);
+		BSP_LCD_DisplayStringAt(50, 160, "Multiple Players", LEFT_MODE);
 	}
 }
 
@@ -534,6 +549,14 @@ void DrawScreenThree()
 	  BSP_LCD_SetFont(&Font20);
 	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	  BSP_LCD_DisplayStringAt(50, 165, "Exit", LEFT_MODE);
+
+	  for (int i = 0; i < 4; i++)
+	  {
+		  BSP_LCD_SetTextColor(solution[i]);
+		  BSP_LCD_FillCircle(40 * (i + 1) + 20, 90, radius*2);
+		  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+		  BSP_LCD_DrawCircle(40 * (i + 1) + 20, 90, radius*2);
+	  }
 	}
 }
 
@@ -556,6 +579,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	// listen again for
 	//HAL_UART_Receive_IT(&huart6, Rx_data, 4);
+
+
 
 }
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -1434,6 +1459,17 @@ void resetGame()
 
 	 memset(clue, "", sizeof clue);
 
+	 multiplayer = true;
+	 sending = false;
+	 receiving = false;
+
+	 //  creating a buffer of 10 bytes
+	 bzero(Rx_data, sizeof Rx_data);
+
+	 // Stores the handle of tasks that will be notified */
+	 TaskHandle_t xTaskToNotifyTx = NULL;
+	 TaskHandle_t xTaskToNotifyRx = NULL;
+
 	 // UI Variables:
 
 	 clearScreen = true;
@@ -1448,7 +1484,7 @@ void resetGame()
 
 	 // Screen 1&3 variables
 
-	 dificulty = -1;
+	 multiplayerChoice = -1;
 	 replayChoice = -1;
 }
 
@@ -1496,21 +1532,25 @@ void StartTask02(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-	  uint32_t ulNotificationValue;
-	  //const TickType_t xMaxBlockTime = portMAX_DELAY; 		// infinite wait time
-	  const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 10000 );	// 10 second wait time
+		if (receiving)
+		{
+		  uint32_t ulNotificationValue;
+		  //const TickType_t xMaxBlockTime = portMAX_DELAY; 		// infinite wait time
+		  const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 10000 );	// 10 second wait time
 
-	  /* Wait to be notified that the transmission is complete.  Note
-	  the first parameter is pdTRUE, which has the effect of clearing
-	  the task's notification value back to 0, making the notification
-	  value act like a binary (rather than a counting) semaphore.  */
-	  ulNotificationValue = ulTaskNotifyTake( pdTRUE, xMaxBlockTime );
+		  //Wait to be notified that the transmission is complete.  Note
+		  //the first parameter is pdTRUE, which has the effect of clearing
+		  //the task's notification value back to 0, making the notification
+		  //value act like a binary (rather than a counting) semaphore.
+		  ulNotificationValue = ulTaskNotifyTake( pdTRUE, xMaxBlockTime );
 
-	  if( ulNotificationValue == 1 )
-	  {
-		  /* Start the transmission - just send the same message back */
-		  HAL_UART_Receive_IT(&huart6, Rx_data, 4);
-	  }
+		  if( ulNotificationValue == 1 )
+		  {
+			  //Start the transmission - just send the same message back
+			  HAL_UART_Receive_IT(&huart6, Rx_data, 4);
+		  }
+		}
+
 	}
 
   /* USER CODE END StartTask02 */
@@ -1533,21 +1573,33 @@ void StartTask03(void *argument)
 	/* Infinite loop */
 	for(;;)
 	{
-	  uint32_t ulNotificationValue;
-	  //const TickType_t xMaxBlockTime = portMAX_DELAY; 		// infinite wait time
-	  const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 10000 );	// 10 second wait time
+		if (receiving)
+		{
+			uint32_t ulNotificationValue;
+			//const TickType_t xMaxBlockTime = portMAX_DELAY; 		// infinite wait time
+			const TickType_t xMaxBlockTime = pdMS_TO_TICKS( 10000 );	// 10 second wait time
 
-	  /* Wait to be notified that the transmission is complete.  Note
-	  the first parameter is pdTRUE, which has the effect of clearing
-	  the task's notification value back to 0, making the notification
-	  value act like a binary (rather than a counting) semaphore.  */
-	  ulNotificationValue = ulTaskNotifyTake( pdTRUE, xMaxBlockTime );
+			//Wait to be notified that the transmission is complete.  Note
+			//the first parameter is pdTRUE, which has the effect of clearing
+			//the task's notification value back to 0, making the notification
+			//value act like a binary (rather than a counting) semaphore.
+			ulNotificationValue = ulTaskNotifyTake( pdTRUE, xMaxBlockTime );
 
-	  if( ulNotificationValue == 1 )
-	  {
-		  /* Start the transmission - just send the same message back */
-		  HAL_UART_Transmit_IT(&huart6, Rx_data, 4);
-	  }
+			if( ulNotificationValue == 1)
+			{
+				//Start the transmission - just send the same message back
+				HAL_UART_Transmit_IT(&huart6, Rx_data, 4);
+				receiving = false;
+			}
+		}
+
+		if (sending)
+		{
+			HAL_UART_Transmit_IT(&huart6, solutionPrompt, 31);
+			sending = false;
+			receiving = true;
+
+		}
 	}
 
   /* USER CODE END StartTask03 */
