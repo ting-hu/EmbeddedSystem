@@ -121,8 +121,6 @@ uint16_t colorOptions[6] = { LCD_COLOR_GREEN, LCD_COLOR_YELLOW, LCD_COLOR_RED, L
 bool generateSolution = true;
 bool checkSolution = false;
 
-bool resetGameValues = true;
-
 int gameRound = 0;
 int currentCol = 0;
 
@@ -997,100 +995,44 @@ static void MX_FSMC_Init(void)
 
 void resetGame()
 {
-	 dificulty = -1;
+	 memset(solution, LCD_COLOR_WHITE, sizeof solution);
+	 generateSolution = true;
+	 checkSolution = false;
 
-	 for (int i = 0; i <10; i++ )
-	 {
-		 for (int j = 0; j < 4; j++)
-		 {
-			newColorMap[i][j] = LCD_COLOR_WHITE;
-		 }
-	 }
+	 gameRound = 0;
+	 currentCol = 0;
+
+	 gameover = false;
+
+	 handlingPress = false;
 
 	 chosenButton = -1;
 	 chosenColor = LCD_COLOR_WHITE;
-	 gameRound = 0;
-	 currentCol = 0;
-	 win = false;
-	 gameover = false;
-
-	 generateSolution = true;
 
 	 correctGuesses = 0;
 	 wrongPositions = 0;
 
-	 replayChoice = -1;
+	 memset(positionUsedSolution, false, sizeof positionUsedSolution);
+	 memset(positionUsedGuess, false, sizeof positionUsedGuess);
 
-	 ////////////
-
-	 uint16_t solution[4];
-	 uint16_t colorOptions[6] = { LCD_COLOR_GREEN, LCD_COLOR_YELLOW, LCD_COLOR_RED, LCD_COLOR_BLUE, LCD_COLOR_MAGENTA, LCD_COLOR_BLACK };
-	 bool generateSolution = true;
-	 bool checkSolution = false;
-
-	 bool resetGameValues = true;
-
-	 int gameRound = 0;
-	 int currentCol = 0;
-
-	 bool gameover = false;
-
-	 bool handlingPress = false;
-
-	 int chosenButton = -1;
-	 uint16_t chosenColor = LCD_COLOR_WHITE;
-
-	 int correctGuesses = 0;
-	 int wrongPositions = 0;
-
-	 bool positionUsedSolution[4] = {false, false, false, false};
-	 bool positionUsedGuess[4] = {false, false, false, false};
-
-	 char clue[20] = "";
+	 memset(clue, "", sizeof clue);
 
 	 // UI Variables:
 
-	 bool clearScreen = true;
+	 clearScreen = true;
 
-	 bool drawScreen = true;
-	 bool drawClue = false;
-	 int screenNum = 1;
-	 bool win = false;
+	 drawScreen = true;
+	 drawClue = false;
+	 screenNum = 1;
+	 win = false;
 
-	 uint16_t currentColorMap[10][4];
-	 uint16_t newColorMap[10][4];
-
-	 const int xPositionMap[10][4] = {
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75},
-	 		{12, 33, 54, 75}
-	 };
-	 const int yPositionMap[10][4] = {
-	 		{13, 13, 13, 13},
-	 		{34, 34, 34, 34},
-	 		{55, 55, 55, 55},
-	 		{76, 76, 76, 76},
-	 		{97, 97, 97, 97},
-	 		{118, 118, 118, 118},
-	 		{139, 139, 139, 139},
-	 		{160, 160, 160, 160},
-	 		{181, 181, 181, 181},
-	 		{202, 202, 202, 202}
-	 };
-
-	 const int radius = 8;
+	 memset(currentColorMap, LCD_COLOR_RED, sizeof currentColorMap);
+	 memset(newColorMap, LCD_COLOR_WHITE, sizeof newColorMap);
 
 	 // Screen 1&3 variables
 
-	 int dificulty = -1;
-	 int replayChoice = -1;
+	 dificulty = -1;
+	 replayChoice = -1;
 }
 
 /* USER CODE END 4 */
@@ -1367,6 +1309,11 @@ void GameControlTask(void *argument)
 				  }
 				  drawScreen = true;
 				  drawClue = true;
+			  }
+
+			  if (gameRound == 10  && !gameover)
+			  {
+				  gameover = true;
 			  }
 
 			  checkSolution = false;
